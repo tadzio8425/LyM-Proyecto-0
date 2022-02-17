@@ -17,3 +17,8 @@
  (( move 1)
  ( goend ) )
  ( skip) ) )
+ (turn :left 5)
+ (face :north)
+ (put Chips rotate)
+ (pick Chips 45)
+ (move-dir 4 :front)

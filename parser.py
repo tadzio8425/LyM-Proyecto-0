@@ -5,13 +5,22 @@ import sys
 class Parser:
 
     def __init__(self):
+
+        #Parser initialization...
         os.chdir(sys.path[0])
+
+        #Parser class variables
         self.commands = ""
         self.blocks = []
         self.checked_blocks = []
-
         self.def_variables = {}
         self.def_functions = {}
+
+        #Aditional non-terminal symbols for reference
+        self.rotate_constants = (":left", ":right", ":around")
+        self.cardinal_constants = (":north", ":south", ":east", ":west")
+        self.balloons_chips = ("Balloons", "Chips")
+        self.move_constants = (":left", ":right", ":front", ":back")
 
     def set_commands(self, file_name):
         with open(file_name) as command_file:
@@ -65,9 +74,6 @@ class Parser:
             count += 1
             
 
-        
-
-
     def evaluate_blocks(self):
 
         for block in self.blocks:
@@ -77,7 +83,8 @@ class Parser:
 
     def evaluate_production(self, block) -> tuple:
 
-        block_definition = (False, None) #Tupla que determina si el bloque es válido [0] y el grupo al que pertenece [1]
+         #Tupla que determina si el bloque es válido [0] y el grupo al que pertenece [1]
+        block_definition = (False, None) 
 
         #Command evaluation
         block = block[1:len(block)-1]
@@ -85,19 +92,45 @@ class Parser:
 
         if "defvar" in block and len(instruction) == 3:   #Regla de producción -- Definición de variables
             if instruction[0] == "defvar" and type(instruction[1]) == str and self.isNumber(instruction[2]):
-                block_definition = (True, "DEFVAR")
+                block_definition = (True, "COMMAND")
                 self.def_variables[instruction[1]] = instruction[2]
 
         elif "=" in block and len(instruction) == 3:
             if instruction[0] == "=" and type(instruction[1]) == str and self.isNumber(instruction[2]):
                 if self.isVariable(instruction[1]):
-                    block_definition = (True, "ASSINGVAR")
+                    block_definition = (True, "COMMAND")
 
         elif "move" in block and len(instruction) == 2:
             if instruction[0] == "move" and (self.isNumber(instruction[1]) or self.isVariable(instruction[1])):
-                block_definition = (True, "MOVE")
+                block_definition = (True, "COMMAND")
+
+        elif "turn" in block and len(instruction) == 2:
+            if instruction[0] == "turn" and instruction[1] in self.rotate_constants:
+                block_definition = (True, "COMMAND")
+
+        elif "face" in block and len(instruction) == 2:
+            if instruction[0] == "face" and instruction[1] in self.cardinal_constants:
+                block_definition = (True, "COMMAND")
+
+        elif "put" in block and len(instruction) == 3:
+            if instruction[0] == "put" and instruction[1] in self.balloons_chips and (self.isNumber(instruction[2]) or self.isVariable(instruction[2])):
+                block_definition = (True, "COMMAND")
+
+        elif "pick" in block and len(instruction) == 3:
+            if instruction[0] == "pick" and instruction[1] in self.balloons_chips and (self.isNumber(instruction[2]) or self.isVariable(instruction[2])):
+                block_definition = (True, "COMMAND")
+
+        elif "move-dir" in block and len(instruction) == 3:
+            if instruction[0] == "move-dir" and (self.isNumber(instruction[1]) or self.isVariable(instruction[1]) and instruction[2] in self.move_constants):
+                block_definition = (True, "COMMAND")
+
+        
             
         return block_definition    
+
+
+
+    ### HELPER METHODS ###
 
     def isNumber(self, number) -> bool:
         check = True
