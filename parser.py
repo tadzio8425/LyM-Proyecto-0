@@ -49,7 +49,7 @@ class Parser:
         for char in self.commands:
             if char=="(" or  char==")":
                 parenthesis_stack.append((char,count));
-            if len(parenthesis_stack)-1>1 and parenthesis_stack[len(parenthesis_stack)-1][0]==")" and parenthesis_stack[len(parenthesis_stack)-2][0]=="(":
+            if len(parenthesis_stack)-1 >= 1 and parenthesis_stack[len(parenthesis_stack)-1][0]==")" and parenthesis_stack[len(parenthesis_stack)-2][0]=="(":
                 start_index=parenthesis_stack[len(parenthesis_stack)-2][1]
                 end_index=parenthesis_stack[len(parenthesis_stack)-1][1]
                 self.blocks.append(self.commands[start_index:end_index+1])
