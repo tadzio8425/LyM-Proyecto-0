@@ -12,16 +12,15 @@ class Parser:
     def set_commands(self, file_name):
         with open(file_name) as command_file:
             self.commands = command_file.read()
-            print(self.commands)
-
+ 
     def parse(self):        
         self.delete_tabs()
         self.check_parenthesis()
         self.detect_blocks()
 
     def delete_tabs(self):
-        self.commands=self.commands.replace("\n","")
-        print(self.commands)
+        self.commands = self.commands.replace("\n","")
+
 
     def check_parenthesis(self) -> bool:
         """Función de revisión inicial que determina que los paréntesis estén 
@@ -42,22 +41,24 @@ class Parser:
 
         return len(parenthesis_stack) == 0        
 
-# ( defvar rotate 3) ( if (blocked - p ) ( move 1) ( sk ip) ) ( i f (blocked - p ) ( move 1) ( sk ip) ) ( left 90) ( defvar one 1) ( defun foo ( c p ) (drop c ) ( f r e e p ) ( move n ) ) ( foo 1 3) ( defun goend () ( i f (not blocked - p ) (( move 1)) ( goend ) ) ( sk ip) ) )
     def detect_blocks(self):
-        parenthesis_stack=[]
-        count=0
+        parenthesis_stack = []
+        count = 0
         for char in self.commands:
-            if char=="(" or  char==")":
-                parenthesis_stack.append((char,count));
-            if len(parenthesis_stack)-1 >= 1 and parenthesis_stack[len(parenthesis_stack)-1][0]==")" and parenthesis_stack[len(parenthesis_stack)-2][0]=="(":
-                start_index=parenthesis_stack[len(parenthesis_stack)-2][1]
-                end_index=parenthesis_stack[len(parenthesis_stack)-1][1]
+            if char == "(" or char == ")":
+                parenthesis_stack.append((char, count))
+                
+            if len(parenthesis_stack)-1 >= 1 and parenthesis_stack[len(parenthesis_stack)-1][0] == ")" and parenthesis_stack[len(parenthesis_stack)-2][0]=="(":
+                
+                start_index = parenthesis_stack[len(parenthesis_stack)-2][1]
+                end_index = parenthesis_stack[len(parenthesis_stack)-1][1]
                 self.blocks.append(self.commands[start_index:end_index+1])
                 parenthesis_stack.pop()
                 parenthesis_stack.pop()
-            count=count+1;
+
+            count += 1
             
-        print("\n")
+
         print(self.blocks)
 
 
