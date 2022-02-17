@@ -1,4 +1,4 @@
- ( defvar rotate 3)
+ (defvar rotate 3)
  (defun blocked-p ()
  (not (can-move-p :north ) ) )
  ( if (blocked-p ) ( move 1) ( skip) )
