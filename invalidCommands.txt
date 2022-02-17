@@ -11,6 +11,6 @@
  ( foo 1 3)
  ( defun goend ()
  ( i f (not blocked - p )
- (( move 1)
+ (( move 1))
  ( goend ) )
  ( sk ip) ) )

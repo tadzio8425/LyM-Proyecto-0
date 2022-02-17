@@ -11,12 +11,35 @@ class Parser:
     def set_commands(self, file_name):
         with open(file_name) as command_file:
             self.commands = command_file.read()
+            print(self.commands)
 
     def parse(self):        
-        self.clean_separators()
+        self.check_parenthesis()
+        self.detect_blocks()
 
-    def clean_separators(self):
-        
+    def check_parenthesis(self) -> bool:
+        """Función de revisión inicial que determina que los paréntesis estén 
+        balanceados y emparejados correctamente."""
+        parenthesis_stack = []
+
+        for char_new in self.commands:
+            if char_new == "(" or char_new == ")":
+                parenthesis_stack.append(char_new)
+
+            if char_new == ")":
+                char_old_index = len(parenthesis_stack)-2
+                char_old = parenthesis_stack[char_old_index]
+
+                if char_old == "(":
+                    parenthesis_stack.pop()
+                    parenthesis_stack.pop()
+
+        return len(parenthesis_stack) == 0        
+
+
+    def detect_blocks(self):
+        pass
+
 
 
 parser = Parser()
