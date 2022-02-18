@@ -178,7 +178,23 @@ class Parser:
 
                 #Determina que es una función con los parámetros correctos        
                 if self.getPreviousBlockType(block_index, block_num) == "PARAMS":
-                                     #Determina si la función ejecuta una serie de comandos o es una condicional
+                    
+                    #Revisa las instrucciones anteriores (en dado caso que tengan parámetros locales)
+
+                    for param in params:
+                        #Se agrega un parámetro como variable (temporalmente)
+                        self.def_variables[param] = param
+
+                    for i in range(block_num - 1):
+                        re_evaluated_index = block_index - i - 1
+                        re_evaluated_block = self.blocks[re_evaluated_index]
+                        self.checked_blocks[re_evaluated_index] = self.evaluate_production(re_evaluated_block, re_evaluated_index)
+
+                    for param in params:
+                        #Se eliminan los parámetros de la lista de variables (una vez evaluada la función)
+                        self.def_variables.pop(param, None)
+                    
+                    #Determina si la función ejecuta una serie de comandos o es una condicional
                     if self.getPreviousBlockType(block_index, 1) == "CONDITION":
                         block_definition = (True, "CONDITION", "FUNCTION-DEF", num_params, params)
                         self.def_functions[instruction[1]] = block_definition
@@ -187,7 +203,7 @@ class Parser:
   
                         block_definition = (True, "COMMAND", "FUNCTION-DEF", num_params, params)
                         self.def_functions[instruction[1]] = block_definition
-
+    
 
                 
         #Function invocation
@@ -241,10 +257,6 @@ class Parser:
 
             if len(temp_block) == 0:
                 block_definition = (True, "BLOCK")
-
-        if block_definition[0] == False:
-            #print([original_block, block])
-            pass
 
         
             
