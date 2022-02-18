@@ -1,3 +1,5 @@
  (defvar rotate 3)
  (move rotate)
  (if (not (can-move-p :south)) (move 1) (put Chips rotate))
+ (loop (facing-p :north) (move rotate))
+(repeat 57 (run-dirs (:front :right)))

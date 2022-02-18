@@ -149,6 +149,16 @@ class Parser:
             if instruction[0] == "if" and self.getPreviousBlockType(block_index, 3) == "CONDITION"  and self.getPreviousBlockType(block_index, 2) == "COMMAND" and self.getPreviousBlockType(block_index, 1) == "COMMAND":
                 block_definition = (True, "COMMAND", "CONDITIONAL")
 
+        #Loop evaluation
+        if "loop" in block and len(instruction) == 3:
+            if instruction[0] == "loop" and self.getPreviousBlockType(block_index, 2) == "CONDITION" and self.getPreviousBlockType(block_index, 1) == "COMMAND":
+                block_definition = (True, "COMMAND", "LOOP")
+
+        if "repeat" in block and len(instruction) == 3:
+            if instruction[0] == "repeat" and (self.isNumber(instruction[1]) or self.isVariable(instruction[1])) and self.getPreviousBlockType(block_index, 1) == "COMMAND":
+                block_definition = (True, "COMMAND", "REPEAT")
+
+
         #Condition evaluation
         if "facing-p" in block and len(instruction) == 2:
             if instruction[0] == "facing-p" and instruction[1] in self.cardinal_constants:
