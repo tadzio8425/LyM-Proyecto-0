@@ -22,3 +22,5 @@
  (put Chips rotate)
  (pick Chips 45)
  (move-dir 4 :front)
+ (move-face 67 :north)
+ (skip)

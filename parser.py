@@ -1,3 +1,5 @@
+from dataclasses import replace
+from operator import index
 import os
 import sys
 
@@ -76,20 +78,25 @@ class Parser:
 
     def evaluate_blocks(self):
 
+        block_index = 0
         for block in self.blocks:
-            checked_block = self.evaluate_production(block)
+            checked_block = self.evaluate_production(block, block_index)
             self.checked_blocks.append(checked_block)
+            block_index += 1
 
 
-    def evaluate_production(self, block) -> tuple:
+    def evaluate_production(self, block, block_index) -> tuple:
 
          #Tupla que determina si el bloque es válido [0] y el grupo al que pertenece [1]
         block_definition = (False, None) 
 
-        #Command evaluation
+        
         block = block[1:len(block)-1]
+        block = self.replaceInternalBlocks(block)
         instruction = block.split(" ")
 
+
+        #Command evaluation
         if "defvar" in block and len(instruction) == 3:   #Regla de producción -- Definición de variables
             if instruction[0] == "defvar" and type(instruction[1]) == str and self.isNumber(instruction[2]):
                 block_definition = (True, "COMMAND")
@@ -121,14 +128,51 @@ class Parser:
                 block_definition = (True, "COMMAND")
 
         elif "move-dir" in block and len(instruction) == 3:
-            if instruction[0] == "move-dir" and (self.isNumber(instruction[1]) or self.isVariable(instruction[1]) and instruction[2] in self.move_constants):
+            if instruction[0] == "move-dir" and (self.isNumber(instruction[1]) or self.isVariable(instruction[1])) and instruction[2] in self.move_constants:
+                block_definition = (True, "COMMAND")
+
+        elif "run-dirs" in block and len(instruction) == 2:
+            if instruction[0] == "run-dirs" and self.getPreviousBlockType(block_index, 1) == "DIRECTION-LIST":
+                block_definition = (True, "COMMAND")
+
+        elif "move-face" in block and len(instruction) == 3:
+             if instruction[0] == "move-face" and (self.isNumber(instruction[1]) or self.isVariable(instruction[1])) and instruction[2] in self.cardinal_constants:
+                 block_definition = (True, "COMMAND")
+
+        elif "skip" in block and len(instruction) == 1:
+            if instruction[0] == "skip":
                 block_definition = (True, "COMMAND")
 
         
-            
+        #Special blocks evaluation
+        elif instruction[0] in self.move_constants:
+            for i in instruction:
+                if i in self.move_constants:
+                    block_definition = (True, "DIRECTION-LIST")
+                else:
+                    block_definition = (False, None)
+                    break
+
         return block_definition    
 
 
+    def replaceInternalBlocks(self, block):
+
+        ignore = False
+        replaced_block = ""
+
+        for char in block:
+            if char == "(":
+                ignore = True
+
+            elif char == ")":
+                ignore = False
+                replaced_block += "BLOCK"
+                
+            elif not ignore:
+                replaced_block += char    
+
+        return replaced_block
 
     ### HELPER METHODS ###
 
@@ -146,6 +190,10 @@ class Parser:
         if name in self.def_variables.keys():
             check = True
         return check
+
+
+    def getPreviousBlockType(self, actualBlockIndex , stepBehind):
+        return self.checked_blocks[actualBlockIndex - stepBehind][1]
 
 parser = Parser()
 parser.set_commands("invalidCommands.txt")
