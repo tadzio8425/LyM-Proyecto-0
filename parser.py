@@ -1,4 +1,5 @@
 from dataclasses import replace
+from dis import Instruction
 from operator import index
 import os
 import sys
@@ -15,6 +16,7 @@ class Parser:
         self.commands = ""
         self.blocks = []
         self.checked_blocks = []
+        self.temp_functions = {}
         self.def_variables = {}
         self.def_functions = {}
 
@@ -162,7 +164,7 @@ class Parser:
         #Function definition
         if "defun" in block:
             if instruction[0] == "defun" and self.isOnlyAString(instruction[1]):
-                block_num = instruction[2].count("BLOCK")
+                block_num = len(replaced_data)
                 params = replaced_data[0].split(" ")
                 num_params = len(params)
 
@@ -176,10 +178,10 @@ class Parser:
                         block_definition = (False, None)
                         break        
 
-                #Determina que es una función con los parámetros correctos        
+                #Determina que es una Sfunción con los parámetros correctos        
                 if self.getPreviousBlockType(block_index, block_num) == "PARAMS":
-                    
                     #Revisa las instrucciones anteriores (en dado caso que tengan parámetros locales)
+                    self.temp_functions[instruction[1]] = (True, "FUNCTION-RECUR", "FUNCTION-DEF", num_params, params)
 
                     for param in params:
                         #Se agrega un parámetro como variable (temporalmente)
@@ -189,6 +191,7 @@ class Parser:
                         re_evaluated_index = block_index - i - 1
                         re_evaluated_block = self.blocks[re_evaluated_index]
                         self.checked_blocks[re_evaluated_index] = self.evaluate_production(re_evaluated_block, re_evaluated_index)
+                    
 
                     for param in params:
                         #Se eliminan los parámetros de la lista de variables (una vez evaluada la función)
@@ -199,21 +202,28 @@ class Parser:
                         block_definition = (True, "CONDITION", "FUNCTION-DEF", num_params, params)
                         self.def_functions[instruction[1]] = block_definition
 
-                    elif self.getPreviousBlockType(block_index, block_num) == "COMMAND":
-  
+                    elif self.getPreviousBlockType(block_index, 1) == "COMMAND":
                         block_definition = (True, "COMMAND", "FUNCTION-DEF", num_params, params)
                         self.def_functions[instruction[1]] = block_definition
-    
+
 
                 
         #Function invocation
-        if instruction[0] in self.def_functions.keys():
-            function = self.def_functions[instruction[0]]
+        if instruction[0] in self.def_functions.keys() or instruction[0] in self.temp_functions:
+            
+            try:
+                function = self.def_functions[instruction[0]]
+            
+            except:
+                function = self.temp_functions[instruction[0]]
+
             function_return = function[1]
             necesary_params = function[3]
 
             if (len(instruction) - 1) == necesary_params:
                 block_definition = (True, function_return, "FUNCTION-INV", necesary_params)
+
+        
                 
 
         #Condition evaluation
@@ -234,7 +244,7 @@ class Parser:
                 block_definition = (True, "CONDITION")
 
         if "not" in block and len(instruction) == 2:
-            if instruction[0] == "not" and self.getPreviousBlockType(block_index, 1) == "CONDITION":
+            if instruction[0] == "not" and (self.getPreviousBlockType(block_index, 1) == "CONDITION" or instruction[1] in self.def_functions.keys()):
                 block_definition = (True, "CONDITION")
 
         
@@ -258,8 +268,7 @@ class Parser:
             if len(temp_block) == 0:
                 block_definition = (True, "BLOCK")
 
-        
-            
+    
         
         
         return block_definition    
