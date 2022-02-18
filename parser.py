@@ -89,10 +89,8 @@ class Parser:
 
     def evaluate_production(self, block, block_index) -> tuple:
 
-         #Tupla que determina si el bloque es válido [0] y el grupo al que pertenece [1]
+        #Tupla que determina si el bloque es válido [0] y el grupo al que pertenece [1]
         block_definition = (False, None) 
-
-        original_block = block
 
         block = block[1:len(block)-1]
         block, replaced_data  = self.replaceInternalBlocks(block)
@@ -148,9 +146,10 @@ class Parser:
 
     
         #Conditional evaluation
-        if "if" in block and len(instruction) == 4:
+        if "if" in block:
             if instruction[0] == "if" and self.getPreviousBlockType(block_index, 3) == "CONDITION"  and self.getPreviousBlockType(block_index, 2) == "COMMAND" and self.getPreviousBlockType(block_index, 1) == "COMMAND":
                 block_definition = (True, "COMMAND", "CONDITIONAL")
+                
 
         #Loop evaluation
         if "loop" in block and len(instruction) == 3:
@@ -171,31 +170,28 @@ class Parser:
                 if num_params == 1 and params[0] == "":
                     num_params = 0
 
+
+
+                #Revisa las instrucciones anteriores (en dado caso que tengan parámetros locales)
+                self.temp_functions[instruction[1]] = (True, "FUNCTION-RECUR", "FUNCTION-DEF", num_params, params)
+
+                for param in params:
+                    #Se agrega un parámetro como variable (temporalmente)
+                    self.def_variables[param] = param
+
+                for i in range(block_num-1, -1, -1):
+                    re_evaluated_index = block_index - i - 1
+                    re_evaluated_block = self.blocks[re_evaluated_index]
+                    self.checked_blocks[re_evaluated_index] = self.evaluate_production(re_evaluated_block, re_evaluated_index)
+                    
                 for param in params:
                     if self.isOnlyAString(param):
                         self.checked_blocks[block_index - block_num] = (True, "PARAMS")
+                        self.def_variables.pop(param, None)
                     else:
                         block_definition = (False, None)
                         break        
-
-                #Determina que es una Sfunción con los parámetros correctos        
-                if self.getPreviousBlockType(block_index, block_num) == "PARAMS":
-                    #Revisa las instrucciones anteriores (en dado caso que tengan parámetros locales)
-                    self.temp_functions[instruction[1]] = (True, "FUNCTION-RECUR", "FUNCTION-DEF", num_params, params)
-
-                    for param in params:
-                        #Se agrega un parámetro como variable (temporalmente)
-                        self.def_variables[param] = param
-
-                    for i in range(block_num - 1):
-                        re_evaluated_index = block_index - i - 1
-                        re_evaluated_block = self.blocks[re_evaluated_index]
-                        self.checked_blocks[re_evaluated_index] = self.evaluate_production(re_evaluated_block, re_evaluated_index)
-                    
-
-                    for param in params:
-                        #Se eliminan los parámetros de la lista de variables (una vez evaluada la función)
-                        self.def_variables.pop(param, None)
+                        
                     
                     #Determina si la función ejecuta una serie de comandos o es una condicional
                     if self.getPreviousBlockType(block_index, 1) == "CONDITION":
@@ -266,7 +262,7 @@ class Parser:
             temp_block = temp_block.replace(" ", "")
 
             if len(temp_block) == 0:
-                block_definition = (True, "BLOCK")
+                block_definition = (True, "COMMAND")
 
     
         
