@@ -159,31 +159,45 @@ class Parser:
             if instruction[0] == "repeat" and (self.isNumber(instruction[1]) or self.isVariable(instruction[1])) and self.getPreviousBlockType(block_index, 1) == "COMMAND":
                 block_definition = (True, "COMMAND", "REPEAT")
 
-        #Function evaluation
+        #Function definition
         if "defun" in block:
             if instruction[0] == "defun" and self.isOnlyAString(instruction[1]):
                 block_num = instruction[2].count("BLOCK")
                 params = replaced_data[0].split(" ")
+                num_params = len(params)
+
+                if num_params == 1 and params[0] == "":
+                    num_params = 0
+
                 for param in params:
                     if self.isOnlyAString(param):
                         self.checked_blocks[block_index - block_num] = (True, "PARAMS")
                     else:
                         block_definition = (False, None)
-                        break
+                        break        
 
                 #Determina que es una función con los parámetros correctos        
                 if self.getPreviousBlockType(block_index, block_num) == "PARAMS":
-
-                    #Determina si la función ejecuta una serie de comandos o es una condicional
+                                     #Determina si la función ejecuta una serie de comandos o es una condicional
                     if self.getPreviousBlockType(block_index, 1) == "CONDITION":
-                        block_definition = (True, "CONDITION", "FUNCTION")
+                        block_definition = (True, "CONDITION", "FUNCTION-DEF", num_params, params)
                         self.def_functions[instruction[1]] = block_definition
 
                     elif self.getPreviousBlockType(block_index, block_num) == "COMMAND":
-                        block_definition = (True, "COMMAND", "FUNCTION")
+  
+                        block_definition = (True, "COMMAND", "FUNCTION-DEF", num_params, params)
                         self.def_functions[instruction[1]] = block_definition
-                
 
+
+                
+        #Function invocation
+        if instruction[0] in self.def_functions.keys():
+            function = self.def_functions[instruction[0]]
+            function_return = function[1]
+            necesary_params = function[3]
+
+            if (len(instruction) - 1) == necesary_params:
+                block_definition = (True, function_return, "FUNCTION-INV", necesary_params)
                 
 
         #Condition evaluation
@@ -208,6 +222,8 @@ class Parser:
                 block_definition = (True, "CONDITION")
 
         
+
+        
         #Special blocks evaluation
         if instruction[0] in self.move_constants:
             for i in instruction:
@@ -216,7 +232,28 @@ class Parser:
                 else:
                     block_definition = (False, None)
                     break
+
+        if "BLOCK" in instruction[0]:
+            temp_block = block.replace("BLOCK", "")
+            temp_block = temp_block.replace("\n", "")
+            temp_block = temp_block.replace("\t", "")
+            temp_block = temp_block.replace(" ", "")
+
+            if len(temp_block) == 0:
+                block_definition = (True, "BLOCK")
+
+        if block_definition[0] == False:
+            #print([original_block, block])
+            pass
+
+        
+            
+        
+        
         return block_definition    
+
+        
+        
 
 
 
@@ -286,4 +323,8 @@ class Parser:
 parser = Parser()
 parser.set_commands("validCommands.txt")
 parser.parse()
-print(parser.checked_blocks)
+
+count = 0
+for i in parser.checked_blocks:
+    print([i, parser.blocks[count]])
+    count += 1
