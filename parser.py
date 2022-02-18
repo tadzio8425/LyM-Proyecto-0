@@ -102,46 +102,73 @@ class Parser:
                 block_definition = (True, "COMMAND")
                 self.def_variables[instruction[1]] = instruction[2]
 
-        elif "=" in block and len(instruction) == 3:
+        if "=" in block and len(instruction) == 3:
             if instruction[0] == "=" and type(instruction[1]) == str and self.isNumber(instruction[2]):
                 if self.isVariable(instruction[1]):
                     block_definition = (True, "COMMAND")
 
-        elif "move" in block and len(instruction) == 2:
+        if "move" in block and len(instruction) == 2:
             if instruction[0] == "move" and (self.isNumber(instruction[1]) or self.isVariable(instruction[1])):
                 block_definition = (True, "COMMAND")
 
-        elif "turn" in block and len(instruction) == 2:
+        if "turn" in block and len(instruction) == 2:
             if instruction[0] == "turn" and instruction[1] in self.rotate_constants:
                 block_definition = (True, "COMMAND")
 
-        elif "face" in block and len(instruction) == 2:
+        if "face" in block and len(instruction) == 2:
             if instruction[0] == "face" and instruction[1] in self.cardinal_constants:
                 block_definition = (True, "COMMAND")
 
-        elif "put" in block and len(instruction) == 3:
+        if "put" in block and len(instruction) == 3:
             if instruction[0] == "put" and instruction[1] in self.balloons_chips and (self.isNumber(instruction[2]) or self.isVariable(instruction[2])):
                 block_definition = (True, "COMMAND")
 
-        elif "pick" in block and len(instruction) == 3:
+        if "pick" in block and len(instruction) == 3:
             if instruction[0] == "pick" and instruction[1] in self.balloons_chips and (self.isNumber(instruction[2]) or self.isVariable(instruction[2])):
                 block_definition = (True, "COMMAND")
 
-        elif "move-dir" in block and len(instruction) == 3:
+        if "move-dir" in block and len(instruction) == 3:
             if instruction[0] == "move-dir" and (self.isNumber(instruction[1]) or self.isVariable(instruction[1])) and instruction[2] in self.move_constants:
                 block_definition = (True, "COMMAND")
 
-        elif "run-dirs" in block and len(instruction) == 2:
+        if "run-dirs" in block and len(instruction) == 2:
             if instruction[0] == "run-dirs" and self.getPreviousBlockType(block_index, 1) == "DIRECTION-LIST":
                 block_definition = (True, "COMMAND")
 
-        elif "move-face" in block and len(instruction) == 3:
+        if "move-face" in block and len(instruction) == 3:
              if instruction[0] == "move-face" and (self.isNumber(instruction[1]) or self.isVariable(instruction[1])) and instruction[2] in self.cardinal_constants:
                  block_definition = (True, "COMMAND")
 
-        elif "skip" in block and len(instruction) == 1:
+        if "skip" in block and len(instruction) == 1:
             if instruction[0] == "skip":
                 block_definition = (True, "COMMAND")
+
+    
+        #Conditional evaluation
+        if "if" in block and len(instruction) == 4:
+            if instruction[0] == "if" and self.getPreviousBlockType(block_index, 3) == "CONDITION"  and self.getPreviousBlockType(block_index, 2) == "COMMAND" and self.getPreviousBlockType(block_index, 1) == "COMMAND":
+                block_definition = (True, "COMMAND", "CONDITIONAL")
+
+        #Condition evaluation
+        if "facing-p" in block and len(instruction) == 2:
+            if instruction[0] == "facing-p" and instruction[1] in self.cardinal_constants:
+                block_definition = (True, "CONDITION")
+
+        if "can-put-p" in block and len(instruction) == 3:
+            if instruction[0] == "can-put-p" and instruction[1] in self.balloons_chips and (self.isNumber(instruction[2]) or self.isVariable(instruction[2])):
+                block_definition = (True, "CONDITION")
+
+        if "can-pick-p" in block and len(instruction) == 3:
+            if instruction[0] == "can-pick-p" and instruction[1] in self.balloons_chips and (self.isNumber(instruction[2]) or self.isVariable(instruction[2])):
+                block_definition = (True, "CONDITION")
+
+        if "can-move-p" in block and len(instruction) == 2:
+            if instruction[0] == "can-move-p" and instruction[1] in self.cardinal_constants:
+                block_definition = (True, "CONDITION")
+
+        if "not" in block and len(instruction) == 2:
+            if instruction[0] == "not" and self.getPreviousBlockType(block_index, 1) == "CONDITION":
+                block_definition = (True, "CONDITION")
 
         
         #Special blocks evaluation
