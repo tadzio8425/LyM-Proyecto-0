@@ -90,11 +90,12 @@ class Parser:
          #Tupla que determina si el bloque es válido [0] y el grupo al que pertenece [1]
         block_definition = (False, None) 
 
-        
-        block = block[1:len(block)-1]
-        block = self.replaceInternalBlocks(block)
-        instruction = block.split(" ")
+        original_block = block
 
+        block = block[1:len(block)-1]
+        block, replaced_data  = self.replaceInternalBlocks(block)
+        block = block.strip()
+        instruction = block.split(" ")
 
         #Command evaluation
         if "defvar" in block and len(instruction) == 3:   #Regla de producción -- Definición de variables
@@ -158,6 +159,32 @@ class Parser:
             if instruction[0] == "repeat" and (self.isNumber(instruction[1]) or self.isVariable(instruction[1])) and self.getPreviousBlockType(block_index, 1) == "COMMAND":
                 block_definition = (True, "COMMAND", "REPEAT")
 
+        #Function evaluation
+        if "defun" in block:
+            if instruction[0] == "defun" and self.isOnlyAString(instruction[1]):
+                block_num = instruction[2].count("BLOCK")
+                params = replaced_data[0].split(" ")
+                for param in params:
+                    if self.isOnlyAString(param):
+                        self.checked_blocks[block_index - block_num] = (True, "PARAMS")
+                    else:
+                        block_definition = (False, None)
+                        break
+
+                #Determina que es una función con los parámetros correctos        
+                if self.getPreviousBlockType(block_index, block_num) == "PARAMS":
+
+                    #Determina si la función ejecuta una serie de comandos o es una condicional
+                    if self.getPreviousBlockType(block_index, 1) == "CONDITION":
+                        block_definition = (True, "CONDITION", "FUNCTION")
+                        self.def_functions[instruction[1]] = block_definition
+
+                    elif self.getPreviousBlockType(block_index, block_num) == "COMMAND":
+                        block_definition = (True, "COMMAND", "FUNCTION")
+                        self.def_functions[instruction[1]] = block_definition
+                
+
+                
 
         #Condition evaluation
         if "facing-p" in block and len(instruction) == 2:
@@ -182,15 +209,16 @@ class Parser:
 
         
         #Special blocks evaluation
-        elif instruction[0] in self.move_constants:
+        if instruction[0] in self.move_constants:
             for i in instruction:
                 if i in self.move_constants:
                     block_definition = (True, "DIRECTION-LIST")
                 else:
                     block_definition = (False, None)
                     break
-
         return block_definition    
+
+
 
 
     def replaceInternalBlocks(self, block):
@@ -198,18 +226,30 @@ class Parser:
         ignore = False
         replaced_block = ""
 
+        replaced_data = []
+        current_data = ""
+
         for char in block:
+
             if char == "(":
                 ignore = True
 
             elif char == ")":
                 ignore = False
                 replaced_block += "BLOCK"
+
+                replaced_data.append(current_data)
+                current_data = ""
+
+            elif ignore:
+                current_data += char
                 
             elif not ignore:
                 replaced_block += char    
 
-        return replaced_block
+            
+
+        return replaced_block, replaced_data
 
     ### HELPER METHODS ###
 
@@ -232,7 +272,18 @@ class Parser:
     def getPreviousBlockType(self, actualBlockIndex , stepBehind):
         return self.checked_blocks[actualBlockIndex - stepBehind][1]
 
+
+    def isOnlyAString(self, string):
+    
+        try:
+            float(string)
+            isString = False
+        except:
+            isString = True
+
+            return isString 
+
 parser = Parser()
-parser.set_commands("invalidCommands.txt")
+parser.set_commands("validCommands.txt")
 parser.parse()
 print(parser.checked_blocks)
