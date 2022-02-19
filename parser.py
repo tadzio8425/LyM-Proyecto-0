@@ -4,6 +4,8 @@ from operator import index
 import os
 import sys
 
+#Camilo Andrés Morillo Cervantes - c.morillo@uniandes.edu.co
+#Juan Sebastián Ortega Romero - js.ortegar1@uniandes.edu.co
 
 class Parser:
 
