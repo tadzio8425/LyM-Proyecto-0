@@ -1,5 +1,24 @@
- (defvar rotate 3)
- (move rotate)
- (if (not (can-move-p :south)) (move 1) (put Chips rotate))
- (loop (facing-p :north) (move rotate))
-(repeat 57 (run-dirs (:front :right)))
+(defvar rotate 3)
+
+(if (blocked-p) (move 1)
+    (skip) )
+
+
+(if (blocked-p) (move 1) (skip))
+
+(left 90)
+
+(defvar one 1)
+
+(defun foo (c p)
+    (drop c)
+    (free p)
+        (move n) )
+
+(foo 1 3)
+
+    (defun goend ()
+    (if (not blocked -p)
+    ((move 1)
+        (goend))
+    (skip)))

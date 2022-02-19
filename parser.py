@@ -30,14 +30,26 @@ class Parser:
         with open(file_name) as command_file:
             self.commands = command_file.read()
  
-    def parse(self):        
+    def parse(self)->bool:        
         self.delete_tabs()
-        self.check_parenthesis()
+        if (self.check_parenthesis()==False):
+            return False
         self.detect_blocks()
         self.evaluate_blocks()
+        return self.itsCorrect()
+
+    def itsCorrect(self):
+        results=True
+        for i in self.checked_blocks:
+            if i[0]== False:
+                results=False
+                break
+
+        return results 
 
     def delete_tabs(self):
         self.commands = self.commands.replace("\n","")
+        self.commands = self.commands.replace("\t","")
 
 
     def check_parenthesis(self) -> bool:
@@ -147,7 +159,21 @@ class Parser:
     
         #Conditional evaluation
         if "if" in block:
-            if instruction[0] == "if" and self.getPreviousBlockType(block_index, 3) == "CONDITION"  and self.getPreviousBlockType(block_index, 2) == "COMMAND" and self.getPreviousBlockType(block_index, 1) == "COMMAND":
+            cond1_inst=self.blocks[block_index-2][1:len(self.blocks[block_index-2])-1].split(")")
+            filter_object = filter(lambda x: x != "", cond1_inst)
+            cond1_inst=list(filter_object)
+            cond1_size=len(cond1_inst)
+
+            cond2_inst=self.blocks[block_index-1][1:len(self.blocks[block_index-1])-1].split(")")
+            filter_object = filter(lambda x: x != "", cond2_inst)
+            cond2_inst=list(filter_object)
+            cond2_size=len(cond2_inst)
+            
+            plus=1
+            if (cond2_size>1 or cond1_size>1):
+                plus=2
+
+            if instruction[0] == "if" and self.getPreviousBlockType(block_index, cond1_size+cond2_size+plus) == "CONDITION"  and self.getPreviousBlockType(block_index, 2) == "COMMAND" and self.getPreviousBlockType(block_index, 1) == "COMMAND":
                 block_definition = (True, "COMMAND", "CONDITIONAL")
                 
 
@@ -339,9 +365,10 @@ class Parser:
 
 parser = Parser()
 parser.set_commands("validCommands.txt")
-parser.parse()
+print(parser.parse())
 
-count = 0
-for i in parser.checked_blocks:
-    print([i, parser.blocks[count]])
-    count += 1
+#Imprimir todos los bloques
+# count = 0
+# for i in parser.checked_blocks:
+#     print([i, parser.blocks[count]])
+#     count += 1
