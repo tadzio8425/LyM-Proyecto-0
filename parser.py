@@ -98,6 +98,12 @@ class Parser:
             self.checked_blocks.append(checked_block)
             block_index += 1
 
+    def show_detailed_analisis(self):
+        #Imprimir todos los bloques
+         count = 0
+         for i in self.checked_blocks:
+             print([i, self.blocks[count]])
+             count += 1
 
     def evaluate_production(self, block, block_index) -> tuple:
 
@@ -363,12 +369,75 @@ class Parser:
 
             return isString 
 
-parser = Parser()
-parser.set_commands("validCommands.txt")
-print(parser.parse())
 
-#Imprimir todos los bloques
-# count = 0
-# for i in parser.checked_blocks:
-#     print([i, parser.blocks[count]])
-#     count += 1
+
+class Interface:
+
+    def __init__(self):
+
+        print("################################################")
+        print("#       ROBOT LANGUAGE - SYNTAX PARSER         #")
+        print("################################################")
+
+        self.parser = None
+        self.show_menu()
+
+    def show_menu(self):
+
+        self.show_options()
+        self.get_option()
+
+    def show_options(self):
+
+        print("\nOpciones: ")
+        print("1) Seleccionar el arhcivo a verificar")
+        print("2) Verificar sintáxis del archivo cargado")
+        print("3) Sair de la aplicación")
+
+
+    def get_option(self):
+        option = input("\nIngrese una opción: ")
+
+        if option == "1":
+            file_name = input("Ingrese el nombre del archivo a verificar (incluya la extensión .txt): ")
+            try:
+                self.parser = Parser()
+                self.parser.set_commands(file_name)
+                print("El archivo ha sido cargado exitosamente.")
+            except FileNotFoundError:
+                print("El archivo ingresado no existe. Intentelo de nuevo.")
+            
+            self.show_menu()
+
+        elif option == "2":
+            result = self.parser.parse()
+            if result:
+                print("El archivo analizado tiene una sintáxis CORRECTA.")
+            else:
+                print("El archivo analizado tiene una sintáxis INCORRECTA.")
+
+            additional_info = input("¿Desea saber más sobre el análisis de su archivo? (Y/N): ")
+            if additional_info.upper() == "Y":
+                self.parser.show_detailed_analisis()
+
+            self.show_menu()
+        
+                
+        elif option == "3":
+            pass
+        
+        else:
+            print("Ha ingresado una opción inválida. Intentelo de nuevo.")
+            self.show_menu()
+
+        
+
+        
+
+
+interfaz = Interface()
+
+
+
+
+
